@@ -132,7 +132,7 @@ file to edit: \(fname.lastPathComponent)
 
 public func exportNotebooks(_ path: Path){
     for entry in try! path.ls() where entry.kind == Entry.Kind.file && 
-        entry.path.basename().matches(#"^\d*_.*ipynb$"#) {
+        entry.path.basename().matches(pat: #"^\d*_.*ipynb$"#) {
         print("Converting \(entry.path.basename())")
         notebookToScript(fname: entry.path.basename())
     }

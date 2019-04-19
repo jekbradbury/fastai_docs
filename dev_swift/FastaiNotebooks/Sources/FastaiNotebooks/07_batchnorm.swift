@@ -8,19 +8,18 @@ import Path
 import TensorFlow
 import Python
 
-class Reference<T> {
-    var value: T
-    init(_ value: T) { self.value = value }
+public class Reference<T> {
+    public var value: T
+    public init(_ value: T) { self.value = value }
 }
 
-protocol LearningPhaseDependent: Layer {
-    var delegate: LayerDelegate<Output> { get set }
+public protocol LearningPhaseDependent: FALayer {
     @differentiable func forwardTraining(to input: Input) -> Output
     @differentiable func forwardInference(to input: Input) -> Output
 }
 
 extension LearningPhaseDependent {
-    func forward(_ input: Input) -> Output {
+    public func forward(_ input: Input) -> Output {
         switch Context.local.learningPhase {
         case .training: return forwardTraining(to: input)
         case .inference: return forwardInference(to: input)
@@ -47,7 +46,7 @@ extension LearningPhaseDependent {
     }
 }
 
-protocol Norm: Layer where Input == Tensor<Scalar>, Output == Tensor<Scalar>{
+public protocol Norm: Layer where Input == Tensor<Scalar>, Output == Tensor<Scalar>{
     associatedtype Scalar
     init(featureCount: Int, epsilon: Scalar)
 }
@@ -96,6 +95,13 @@ public struct FABatchNorm<Scalar: TensorFlowFloatingPoint>: LearningPhaseDepende
         let variance = runningVariance.value
         let normalizer = rsqrt(variance + epsilon) * scale
         return (input - mean) * normalizer + offset
+    }
+    
+    @differentiable
+    public func call(_ input: Input) -> Output {
+        let activation = forward(input)
+        delegate.didProduceActivation(activation)
+        return activation
     }
 }
 
